@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planning App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <marquee>Left mouse button - completed task, right mouse button - delete</marquee>
+  
+  <div class="container">
+    <h1>Planning App</h1>
+    <div class="tasks">
+      <ul id="active-tasks"></ul>
+      <ul id="completed-tasks" style="display: none;"></ul>
+      <ul id="deleted-tasks" style="display: none;"></ul>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="newTaskInput" placeholder="Add a new task">
+      <button onclick="addTask()">Add Task</button>
+      <select id="taskFilter" onchange="updateView()">
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+        <option value="deleted">Deleted</option>
+      </select>
+    </div>
+  </div>
+
+
+  <script src="scripts.js"></script>
+</body>
+</html>
