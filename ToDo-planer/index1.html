@@ -28,7 +28,143 @@
     </div>
   </div>
 
+  <footer>
+    <hr>
+    <span id="copyright">
+      Copyright &copy; 
+    </span>
+  </footer>
 
-  <script src="scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      loadTasks(); // Загрузка задач при загрузке страницы
+    });
+
+    function addTask() {
+      var newTaskInput = document.getElementById("newTaskInput");
+      var activeTasksList = document.getElementById("active-tasks");
+      
+      var listItem = document.createElement("li");
+      var date = new Date().toISOString().slice(0, 10);
+      var dateSup = document.createElement("sup");
+      dateSup.textContent = date;
+      
+      listItem.textContent = newTaskInput.value;
+      listItem.insertBefore(dateSup, listItem.firstChild);
+      
+      var completeButton = document.createElement("button");
+      completeButton.textContent = "Выполнено";
+      completeButton.addEventListener("click", function() {
+        completeTask(listItem);
+      });
+      
+      listItem.appendChild(completeButton);
+      
+      activeTasksList.appendChild(listItem);
+      newTaskInput.value = "";
+
+      saveTasks(); // Сохранение задач после добавления новой
+    }
+    
+    function completeTask(task) {
+      var completedTasksList = document.getElementById("completed-tasks");
+      task.querySelector("sup").remove(); // Удаляем дату
+      task.querySelector("button").remove(); // Удаляем кнопку "Выполнено"
+      
+      var deleteButton = document.createElement("button");
+      deleteButton.textContent = "Корзина";
+      deleteButton.addEventListener("click", function() {
+        deleteTask(task);
+      });
+      
+      task.appendChild(deleteButton); // Добавляем кнопку "Корзина" в задачу
+      
+      document.getElementById('active-tasks').removeChild(task); // Удаляем задачу из списка активных задач
+      completedTasksList.appendChild(task); // Добавляем задачу в список выполненных задач
+      document.getElementById('taskFilter').value = 'completed'; // Автоматически переключаем фильтр на "Completed"
+      updateView(); // Обновляем вид страницы
+
+      saveTasks(); // Сохранение задач после перемещения в выполненные
+    }
+    
+    function deleteTask(task) {
+      var deletedTasksList = document.getElementById("deleted-tasks");
+      task.querySelector("button").remove(); // Удаляем кнопку "Корзина"
+      
+      document.getElementById('completed-tasks').removeChild(task); // Удаляем задачу из списка выполненных задач
+      deletedTasksList.appendChild(task); // Добавляем задачу в список удаленных задач
+      document.getElementById('taskFilter').value = 'deleted'; // Автоматически переключаем фильтр на "Deleted"
+      updateView(); // Обновляем вид страницы
+
+      saveTasks(); // Сохранение задач после перемещения в корзину
+    }
+    
+    function updateView() {
+      var selectedFilter = document.getElementById('taskFilter').value;
+      var activeTasks = document.getElementById('active-tasks');
+      var completedTasks = document.getElementById('completed-tasks');
+      var deletedTasks = document.getElementById('deleted-tasks');
+      
+      activeTasks.style.display = selectedFilter === 'active' ? 'block' : 'none';
+      completedTasks.style.display = selectedFilter === 'completed' ? 'block' : 'none';
+      deletedTasks.style.display = selectedFilter === 'deleted' ? 'block' : 'none';
+    }
+
+    function saveTasks() {
+      var tasks = {
+        active: getTasksFromList('active-tasks'),
+        completed: getTasksFromList('completed-tasks'),
+        deleted: getTasksFromList('deleted-tasks')
+      };
+
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+      var tasksString = localStorage.getItem('tasks');
+      if (tasksString) {
+        var tasks = JSON.parse(tasksString);
+        tasks.active.forEach(function(task) {
+          addTaskToList(task, 'active-tasks');
+        });
+        tasks.completed.forEach(function(task) {
+          addTaskToList(task, 'completed-tasks');
+        });
+        tasks.deleted.forEach(function(task) {
+          addTaskToList(task, 'deleted-tasks');
+        });
+      }
+    }
+
+    function addTaskToList(task, listId) {
+      var taskList = document.getElementById(listId);
+
+      var taskItem = document.createElement('li');
+      taskItem.textContent = task.text;
+
+      taskList.appendChild(taskItem);
+
+      taskItem.addEventListener('click', function () {
+        completeTask(taskItem);
+      });
+
+      taskItem.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+        deleteTask(taskItem);
+      });
+    }
+
+    function getTasksFromList(listId) {
+      var taskItems = document.getElementById(listId).getElementsByTagName('li');
+      var tasks = [];
+      for (var i = 0; i < taskItems.length; i++) {
+        var task = {
+          text: taskItems[i].textContent
+        };
+        tasks.push(task);
+      }
+      return tasks;
+    }
+  </script>
 </body>
 </html>
