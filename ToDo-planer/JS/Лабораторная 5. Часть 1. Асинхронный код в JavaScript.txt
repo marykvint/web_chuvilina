@@ -1,0 +1,187 @@
+//Задача 1 (на таймеры)
+//Написать функцию counter(n), которая выводит в консоль раз в секунду числа n, n-1 ... 2, 1, 0 и останавливается.
+
+function counter(n) {
+    
+    console.log(n);
+    
+    let interval = setInterval(function() {
+        n--;
+        console.log(n);
+        
+        if (n === 0) {
+            clearInterval(interval);
+        }
+    }, 1000);
+}
+
+counter(5);
+
+//Написать функцию createCounter(n), возвращающую объект с методами(
+//start() -- запускает (или возобновляет) счётчик c интервалом 1 секунда: N, N-1.; 
+//pause() -- приостанавливает счёт, но не сбрасывает счётчик;
+//stop() -- останавливает счёт, сбрасывает счётчик.)
+
+function createCounter(n) {
+    let currentCount = n;
+    let intervalId = null;
+
+    function countDown() {
+        console.log(currentCount);
+        currentCount--;
+        if (currentCount < 0) {
+            clearInterval(intervalId);
+        }
+    }
+
+    return {
+        start: function() {
+            if (intervalId === null) {
+                console.log(currentCount);
+                intervalId = setInterval(countDown, 1000);
+            }
+        },
+        pause: function() {
+            clearInterval(intervalId);
+            intervalId = null;
+        },
+        stop: function() {
+            clearInterval(intervalId);
+            intervalId = null;
+            currentCount = n;
+        }
+    };
+}
+
+
+//используем
+
+
+const myCounter = createCounter(5);
+myCounter.start(); 
+
+setTimeout(() => {
+    myCounter.pause(); 
+}, 3000);
+
+setTimeout(() => {
+    myCounter.start(); 
+}, 5000);
+
+setTimeout(() => {
+    myCounter.stop(); 
+}, 8000);
+
+
+//Задача 2 (на промисы)
+//Написать функцию delay(N), возвращающую промис, который сделает resolve() через N секунд.
+
+function delay(N) {
+    return new Promise(resolve => {
+        setTimeout(resolve, N * 1000);
+    });
+}
+
+//используем
+delay(5).then(() => {
+    console.log('Прошло 5 секунд');
+});
+
+
+//Решить задачу со счётчиком N, N-1 ... 2, 1, 0 через функцию delay.
+
+function delay(N) {
+    return new Promise(resolve => {
+        setTimeout(resolve, N * 1000);
+    });
+}
+
+function counter(N) {
+    const promises = [];
+    for (let i = N; i >= 0; i--) {
+        promises.push(delay(N - i).then(() => {
+            console.log(i);
+        }));
+    }
+    
+    return Promise.all(promises);
+}
+
+counter(5).then(() => {
+    console.log('Счетчик завершен');
+});
+
+//Написать функцию, возвращающую название первого репозитория на github.com по имени пользователя
+async function getFirstRepository(username) {
+    try {
+
+        const userResponse = await fetch(`https://api.github.com/users/${username}`);
+        const userData = await userResponse.json();
+
+
+        if (userResponse.ok) {
+            const reposResponse = await fetch(userData.repos_url);
+            const reposData = await reposResponse.json();
+
+            if (reposResponse.ok && reposData.length > 0) {
+                return reposData[0].name;
+            } else {
+                throw new Error('Пользователь не имеет репозиториев');
+            }
+        } else {
+            throw new Error('Пользователь не найден');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error.message);
+    }
+}
+
+//используем
+const username = 'marykvint'; 
+getFirstRepository(username)
+    .then(repositoryName => {
+        console.log(`Первый репозиторий пользователя ${username}: ${repositoryName}`);
+    });
+
+
+//Задача 3 (на async/await) Перепишите, используя async/await вместо .then/catch.
+
+class HttpError extends Error {
+  constructor(response) {
+    super(`${response.status} for ${response.url}`);
+    this.name = 'HttpError';
+    this.response = response;
+  }
+}
+
+async function loadJson(url) {
+  const response = await fetch(url);
+  if (response.status == 200) {
+    return response.json();
+  } else {
+    throw new HttpError(response);
+  }
+}
+
+
+async function getGithubUser() {
+  let user;
+  while (!user) {
+    let name = prompt("Введите логин?", "iliakan");
+
+    try {
+      user = await loadJson(`https://api.github.com/users/${name}`);
+      alert(`Полное имя: ${user.name}.`);
+    } catch (err) {
+      if (err instanceof HttpError && err.response.status == 404) {
+        alert("Такого пользователя не существует, пожалуйста, повторите ввод.");
+      } else {
+        throw err;
+      }
+    }
+  }
+  return user;
+}
+
+getGithubUser();
+
